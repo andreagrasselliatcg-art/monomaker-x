@@ -1,0 +1,36 @@
+name: Build Mono Maker - X
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            name: macOS
+            cmake_extra: -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+          - os: windows-latest
+            name: Windows
+            cmake_extra: ""
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake_extra }}
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Upload plugins
+        uses: actions/upload-artifact@v4
+        with:
+          name: MonoMakerX-${{ matrix.name }}
+          path: |
+            build/MonoMakerX_artefacts/Release/VST3
+            build/MonoMakerX_artefacts/Release/AU
+            build/MonoMakerX_artefacts/Release/Standalone
